@@ -6,6 +6,7 @@ import time
 import select
 import binascii
 # Should use stdev
+import statistics
 
 ICMP_ECHO_REQUEST = 8
 
@@ -48,8 +49,10 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         recPacket, addr = mySocket.recvfrom(1024)
 
         # Fill in start
-
         # Fetch the ICMP header from the IP packet
+        icmpHeader = recPacket[20:] # icmp packet starts after IP header (20bytes) and is 8 bytes long
+        #get icmp header fields
+        type, code, checksum, identifier, seqnum = struct.unpack('bbHHh',icmpHeader) # 1 byte, 1 byte, 2bytes, 4 bytes --> use how it was packed
 
         # Fill in end
         timeLeft = timeLeft - howLongInSelect
@@ -101,22 +104,29 @@ def doOnePing(destAddr, timeout):
 
 
 def ping(host, timeout=1):
-    # timeout=1 means: If one second goes by without a reply from the server,  	
+    # timeout=1 means: If one second goes by without a reply from the server,
     # the client assumes that either the client's ping or the server's pong is lost
     dest = gethostbyname(host)
     print("Pinging " + dest + " using Python:")
     print("")
-    
+
     #Send ping requests to a server separated by approximately one second
     #Add something here to collect the delays of each ping in a list so you can calculate vars after your ping
-    
+    all_delays = []
+    vars = []
+
     for i in range(0,4): #Four pings will be sent (loop runs for i=0, 1, 2, 3)
         delay = doOnePing(dest, timeout)
         print(delay)
+        all_delays.append(delay)
         time.sleep(1)  # one second
-        
+
     #You should have the values of delay for each ping here; fill in calculation for packet_min, packet_avg, packet_max, and stdev
-    #vars = [str(round(packet_min, 8)), str(round(packet_avg, 8)), str(round(packet_max, 8)),str(round(stdev(stdev_var), 8))]
+    packet_min = min(all_delays)
+    packet_avg = sum(all_delays)/len(all_delays)
+    packet_max - max(all_delays)
+    stdev_var = statistics.stdev(all_delays)
+    vars = [str(round(packet_min, 8)), str(round(packet_avg, 8)), str(round(packet_max, 8)),str(round(stdev(stdev_var), 8))]
 
     return vars
 
