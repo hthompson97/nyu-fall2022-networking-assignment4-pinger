@@ -54,6 +54,16 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         #get icmp header fields
         type, code, checksum, identifier, seqnum = struct.unpack('bbHHh',icmpHeader) # 1 byte, 1 byte, 2bytes, 4 bytes --> use how it was packed
 
+        #return ttl and rtt
+
+        if type != ICMP_ECHO_REQUEST: #not
+            payloadSize = struct.calcsize("d")
+            payload = struct.unpack("d", recPacket[28:28+payloadSize])
+            timeStamp = payload[0] #the time it was sent
+            ttl = timeReceived - timeStamp
+            return ttl #ttl is the new timestamp
+
+
         # Fill in end
         timeLeft = timeLeft - howLongInSelect
         if timeLeft <= 0:
@@ -117,7 +127,7 @@ def ping(host, timeout=1):
 
     for i in range(0,4): #Four pings will be sent (loop runs for i=0, 1, 2, 3)
         delay = doOnePing(dest, timeout)
-        print(delay)
+        #print(delay)
         if isinstance(delay,str): delay = 0
         all_delays.append(delay)
         time.sleep(1)  # one second
@@ -128,7 +138,7 @@ def ping(host, timeout=1):
     packet_max = max(all_delays)
     stdev_var = statistics.stdev(all_delays)
     vars = [str(round(packet_min, 8)), str(round(packet_avg, 8)), str(round(packet_max, 8)),str(round(stdev_var, 8))]
-
+    #print(vars)
     return vars
 
 if __name__ == '__main__':
